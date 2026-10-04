@@ -16,13 +16,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # If only a .zip was uploaded to the repo, unpack it
+      - name: Unpack zip (if needed)
+        run: |
+          if [ -z "$(find . -name settings.gradle -not -path './.git/*')" ]; then
+            z=$(find . -name '*.zip' -not -path './.git/*' | head -n 1)
+            if [ -n "$z" ]; then
+              echo "Unpacking $z"
+              unzip -oq "$z" -d _project
+            fi
+          fi
+
       # Finds the Gradle project wherever it was uploaded
       - name: Locate project
         id: find
         run: |
           f=$(find . -name settings.gradle -not -path './.git/*' | head -n 1)
           if [ -z "$f" ]; then
-            echo "::error::settings.gradle not found. Upload the CONTENTS of the project folder to the repo."
+            echo "::error::settings.gradle not found. Upload the project files (or the .zip) to the repo."
             exit 1
           fi
           dir=$(dirname "$f")
